@@ -64,15 +64,70 @@ gameScene.createUi = function(){
     
     this.rotateBtn = this.add.sprite(288,570,'rotate').setInteractive();
     this.rotateBtn.on('pointerdown', this.rotatePet);
+
+    //button array
+    this.buttons = [this.appleBtn,this.candyBtn,this.toyBtn,this.rotateBtn]
+
+    //ui is not blocked
+    this.uiBlocked = false;
+
+    //refresh ui;
+    this.uiReady;
 };
 
 gameScene.rotatePet = function(){
+  //the ui can't be blocked in order to rotate pet
+  if(this.scene.uiBlocked) return;
+
+  //make sure the ui is ready
+  this.scene.uiReady();
+
+  //block the ui
+  this.scene.uiBlocked = true;
+
+  //dim rotate icon 
+  this.alpa = 0.5;
+  
+  let scene = this.scene;
+  //set scene back to ready
+  setTimeout(function(){
+    scene.uiReady();
+  },2000);
+
   console.log('we are rotating the pet')
 };
 
 gameScene.pickItem = function(){
+  //the ui can't be blocked in order to get item
+  if(this.scene.uiBlocked) return;
+
+  //make sure the ui is ready
+  this.scene.uiReady();
+
+  // select item
+  this.scene.selectedItem =  this;
+
+  // change transparency of sprite
+  this.alpha = 0.5;
   
   console.log('we are picking the ' + this.texture.key)
+};
+
+//set ui to ready
+gameScene.uiReady = function(){
+//nothing to be selected
+this.selectedItem = null;
+
+//set all buttons to aplha 1
+for (let i = 0; i < this.buttons.length; i++){
+  this.buttons[i].alpha = 1;
+};
+
+//scene must be unblocked
+this.uiBlocked = false;
+
+
+
 };
 
 // our game's configuration

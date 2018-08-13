@@ -32,7 +32,11 @@ gameScene.preload = function() {
 // executed once, after assets were loaded
 gameScene.create = function() {
   //game background
-  this.background = this.add.sprite(0,0,'backyard').setOrigin(0,0)
+  this.background = this.add.sprite(0,0,'backyard').setOrigin(0,0).setInteractive();
+
+  //event listener for the background
+  this.background.on('pointerdown', this.placeItem, this);
+
   //adds pet sprite sheet
   this.pet = this.add.sprite(100,200,'pet', 0).setInteractive();
   // make pet draggable
@@ -63,6 +67,7 @@ gameScene.createUi = function(){
     this.toyBtn.on('pointerdown', this.pickItem);
     
     this.rotateBtn = this.add.sprite(288,570,'rotate').setInteractive();
+    this.rotateBtn.customStats = {health: 0, fun: 20};
     this.rotateBtn.on('pointerdown', this.rotatePet);
 
     //button array
@@ -86,15 +91,29 @@ gameScene.rotatePet = function(){
   this.scene.uiBlocked = true;
 
   //dim rotate icon 
-  this.alpa = 0.5;
+  this.alpha = 0.5;
   
   let scene = this.scene;
   //set scene back to ready
-  setTimeout(function(){
-    scene.uiReady();
-  },2000);
+  //setTimeout(function(){
+    //scene.uiReady();
+  //},2000);
 
-  console.log('we are rotating the pet')
+  //rotation tween
+  let rotateTween = this.scene.tweens.add({
+    targets: this.scene.pet,
+    duration: 600,
+    angle: 720,
+    pause: false,
+    callbackScope: this,
+    onComplete: function(tween, sprites){
+      //increase fun
+      this.scene.stats.fun += this.customStats.fun;
+      //set UI to ready
+      this.scene.uiReady();
+      
+    }
+  });
 };
 
 gameScene.pickItem = function(){
@@ -126,8 +145,29 @@ for (let i = 0; i < this.buttons.length; i++){
 //scene must be unblocked
 this.uiBlocked = false;
 
+};
 
+//place a new item on the background
+gameScene.placeItem = function(pointer, localX,localY){
+  //check that an item was selected
+  if(!this.selectedItem) return;
 
+  //create a new item in the position that the player clicked
+  let newItem = this.add.sprite(localX,localY, this.selectedItem.texture.key);
+
+  //pet stats
+  //this.stats.health += this.selectedItem.customStats.health;
+  //this.stats.fun += this.selectedItem.customStats.fun;
+  //same thing as above
+  for(stat in this.selectedItem.customStats){
+    if(this.selectedItem.customStats.hasOwnProperty(stat)){
+      this.stats[stat] += this.selectedItem.customStats[stat];
+    }
+  };
+
+  console.log(this.stats);
+  //clear UI
+  this.uiReady();
 };
 
 // our game's configuration

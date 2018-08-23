@@ -39,8 +39,19 @@ gameScene.create = function() {
 
   //adds pet sprite sheet
   this.pet = this.add.sprite(100,200,'pet', 0).setInteractive();
+  this.pet.depth = 1;
   // make pet draggable
   this.input.setDraggable(this.pet);
+
+  //animation
+  this.anims.create({
+    key: 'funnyfaces',
+    frames: this.anims.generateFrameNames('pet', {frames: [1,2,3]}),
+    frameRate: 7,
+    yoyo:true,
+    repeat: 0 //1 for 1 repeat, -1 for repeating forever
+  });
+
   //follow the pointer when dragging
   this.input.on('drag',function(pointer,gameObject,dragX,dragY){
     //make sprite be located at coord of the dragging
@@ -152,22 +163,50 @@ gameScene.placeItem = function(pointer, localX,localY){
   //check that an item was selected
   if(!this.selectedItem) return;
 
+  //ui must be unblocked
+  if(this.uiBlocked) return;
+
   //create a new item in the position that the player clicked
   let newItem = this.add.sprite(localX,localY, this.selectedItem.texture.key);
 
-  //pet stats
-  //this.stats.health += this.selectedItem.customStats.health;
-  //this.stats.fun += this.selectedItem.customStats.fun;
-  //same thing as above
-  for(stat in this.selectedItem.customStats){
-    if(this.selectedItem.customStats.hasOwnProperty(stat)){
-      this.stats[stat] += this.selectedItem.customStats[stat];
+  //block ui
+  this.uiBlocked = true;
+
+  //pet movement tween
+  let petTween = this.tweens.add({
+    targets: this.pet,
+    duration: 500,
+    x: newItem.x,
+    y: newItem.y,
+    paused: false,
+    callbackScope: this,
+    onComplete: function(tween, sprites){
+      //destroy item that was created
+      newItem.destroy();
+
+      //event listener for when spritesheet animation ends
+      this.pet.on('animationcomplete',function(){
+        //set pet back to neutral face
+        this.pet.setFrame(0);
+        //clear UI
+        this.uiReady();
+      },this);
+      //sprite sheet animation
+      this.pet.play('funnyfaces')
+      //pet stats
+      //this.stats.health += this.selectedItem.customStats.health;
+      //this.stats.fun += this.selectedItem.customStats.fun;
+      //same thing as above
+      for(stat in this.selectedItem.customStats){
+        if(this.selectedItem.customStats.hasOwnProperty(stat)){
+          this.stats[stat] += this.selectedItem.customStats[stat];
+        }
+      };
     }
-  };
+  });
 
   console.log(this.stats);
-  //clear UI
-  this.uiReady();
+
 };
 
 // our game's configuration
